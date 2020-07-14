@@ -1,3 +1,6 @@
 {
-    "commandDir": "./commands"
+    "commandDirs": [
+        { "location": "./commands/general", "prefix": "!" },
+        { "location": "./commands/game-of-things", "prefix": "gt!" }
+    ]
 }

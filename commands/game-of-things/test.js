@@ -1,5 +1,5 @@
 module.exports = {
-    name: '!test',
+    name: 'test',
     description: 'test',
     execute(message, args) {
         message.channel.send('works');
