@@ -4,7 +4,6 @@ const Discord = require('discord.js');
 const { commandDirs } = require('./config.json');
 
 const client = new Discord.Client();
-client.commands = new Discord.Collection();
 
 const _loadDir = (dir) => {
     const files = fs.readdirSync(dir);
@@ -39,38 +38,51 @@ const installCommands = () => {
         commandModules[dir.prefix] = _installDir(_loadDir(dir.location));
     }
 
+    commandModules[`findModule`] = function (messageText) {
+        for (const [prefix, commands] of Object.entries(this)) {
+            if (messageText.startsWith(prefix)) return { prefix, commands };
+        }
+
+        return false;
+    };
+
     return commandModules;
 };
 
-const _findModule = (messageText, commandModules) => {
-    for (const [prefix, commands] of Object.entries(commandModules)) {
-        if (messageText.startsWith(prefix)) return { prefix, commands };
-    }
+client.commandModules = installCommands();
 
-    return false;
-};
-
-const commandModules = installCommands();
+console.log(client);
 
 client.on('ready', () => {
     console.log('ayy connected');
 });
 
 client.on('message', (message) => {
-    const commandModule = _findModule(message.content, commandModules);
+    const cm = client.commandModules;
+    const commandModule = cm.findModule(message.content);
     if (message.author.bot || !commandModule) return;
     const { prefix, commands } = commandModule;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
 
-    if (!commands.has(commandName)) return;
-
     const command =
         commands.get(commandName) ||
         commands.find(
             (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
         );
+
+    if (!command) return;
+
+    if (command.args && !args.length) {
+        let reply = `You didn't provide any arguments, ${message.author}!`;
+
+        if (command.usage) {
+            reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+        }
+
+        return message.channel.send(reply);
+    }
 
     try {
         command.execute(message, args);

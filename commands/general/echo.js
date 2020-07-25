@@ -1,8 +1,10 @@
 module.exports = {
     name: 'echo',
-    description: 'responds with input message minus !echo part',
-    usage: '!echo [anything]',
+    description: 'says what you said',
+    usage: '[anything]',
+    args: true,
+    aliases: ['repeat'],
     execute(message, args) {
-        message.channel.send(message.content.replace('!echo', ''));
+        message.channel.send(args.join(' '));
     },
 };
